@@ -1,0 +1,41 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: whiskers-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: whiskers
+    ports:
+      - "5433:5432"  # 5433 to avoid conflict with project1-fastapi on 5432
+    volumes:
+      - whiskers_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d whiskers"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build: .
+    container_name: whiskers-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/whiskers
+      DJANGO_SECRET_KEY: dev-insecure-change-me
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: "*"
+      JWT_SIGNING_KEY: dev-jwt-signing-key
+    ports:
+      - "8001:8000"  # 8001 so project1-fastapi can keep 8000
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py loaddata catalog/fixtures/seed.json 2>/dev/null || true &&
+             gunicorn whiskers.wsgi:application --bind 0.0.0.0:8000 --workers 3 --reload"
+    volumes:
+      - ./:/app  # mount for dev reload
+
+volumes:
+  whiskers_pgdata:

@@ -1,0 +1,46 @@
+[project]
+name = "whiskers"
+version = "0.1.0"
+description = "A cat food e-commerce REST API built with Django REST Framework. Portfolio project."
+readme = "README.md"
+requires-python = ">=3.12"
+authors = [{ name = "Nafisa Islam", email = "Islamnafisa94@gmail.com" }]
+
+dependencies = [
+    "django>=5.1,<6.0",
+    "djangorestframework>=3.15",
+    "djangorestframework-simplejwt>=5.3",
+    "django-filter>=24.3",
+    "drf-spectacular>=0.27",
+    "psycopg[binary]>=3.2",
+    "django-environ>=0.11",
+    "gunicorn>=23.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "pytest-django>=4.9",
+    "ruff>=0.7",
+    "faker>=30.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF", "DJ"]
+ignore = [
+    "E501",   # line too long (handled by formatter)
+    "RUF012", # mutable class default — false positive on Django/DRF class-level tuples
+    "RUF001", # ambiguous unicode character (we use × in __str__ for readability)
+    "DJ012",  # model body ordering — purely stylistic
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "whiskers.settings"
+python_files = ["test_*.py", "tests.py"]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --reuse-db"
